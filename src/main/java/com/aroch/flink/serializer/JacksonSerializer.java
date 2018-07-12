@@ -1,5 +1,6 @@
 package com.aroch.flink.serializer;
 
+import com.aroch.flink.util.SerializerUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.api.common.typeutils.CompatibilityResult;
 import org.apache.flink.api.common.typeutils.GenericTypeSerializerConfigSnapshot;
@@ -11,6 +12,7 @@ import org.apache.flink.core.memory.DataOutputView;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+@SuppressWarnings("WeakerAccess")
 public class JacksonSerializer<T> extends TypeSerializer<T> {
 
     private final Class<T> type;
@@ -51,11 +53,7 @@ public class JacksonSerializer<T> extends TypeSerializer<T> {
 
     @Override
     public void copy(DataInputView source, DataOutputView target) throws IOException {
-        int frameSize = source.readInt();
-        byte[] frame = new byte[frameSize];
-        source.readFully(frame);
-        target.writeInt(frameSize);
-        target.write(frame);
+        SerializerUtils.copyFrame(source, target);
     }
 
     @Override
@@ -123,13 +121,14 @@ public class JacksonSerializer<T> extends TypeSerializer<T> {
         return getClass().getName() + " (" + type.getName() + ')';
     }
 
+    @SuppressWarnings("unused")
     public static final class JacksonSerializerConfigSnapshot<T> extends GenericTypeSerializerConfigSnapshot {
 
         // used for reflection only
         public JacksonSerializerConfigSnapshot() {
         }
 
-        public JacksonSerializerConfigSnapshot(Class<T> typeClass) {
+        JacksonSerializerConfigSnapshot(Class<T> typeClass) {
             super(typeClass);
         }
 
